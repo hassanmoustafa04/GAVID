@@ -1,0 +1,22 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+artifacts/
+
+# Virtual environments
+.venv/
+venv/
+
+# Node artifacts
+frontend/node_modules/
+frontend/dist/
+
+# VSCode / IDE
+.idea/
+.vscode/
+
+# Mac
+.DS_Store

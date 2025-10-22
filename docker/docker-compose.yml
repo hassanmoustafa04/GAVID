@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    image: gavid-backend:latest
+    container_name: gavid-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - GAVID_MODEL_ENGINE_PATH=/app/artifacts/resnet18_fp16_engine.tsrt
+    volumes:
+      - backend-artifacts:/app/artifacts
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [compute, utility]
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    image: gavid-frontend:latest
+    container_name: gavid-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+  # dcgm-exporter:
+  #   image: nvcr.io/nvidia/k8s/dcgm-exporter:3.2.0-3.1.8-ubuntu22.04
+  #   container_name: gavid-dcgm-exporter
+  #   restart: unless-stopped
+  #   ports:
+  #     - "9400:9400"
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [utility]
+
+volumes:
+  backend-artifacts:

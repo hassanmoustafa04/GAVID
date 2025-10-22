@@ -1,0 +1,17 @@
+FROM nvcr.io/nvidia/pytorch:24.01-py3
+
+WORKDIR /app
+
+# Install Python dependencies
+COPY backend/requirements.txt ./requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+
+# Copy application
+COPY backend/app ./app
+
+ENV PYTHONUNBUFFERED=1 \
+    GAVID_MODEL_ENGINE_PATH=/app/artifacts/resnet18_fp16_engine.tsrt
+
+EXPOSE 8000
+
+CMD ["python", "-m", "app.__main__"]

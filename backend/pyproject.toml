@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gavid-backend"
+version = "0.1.0"
+description = "GPU-Accelerated Vision Inference Dashboard backend service."
+authors = [{ name = "Hassan Moustafa" }]
+dependencies = [
+  "fastapi>=0.110,<0.112",
+  "uvicorn[standard]>=0.27,<0.28",
+  "python-multipart>=0.0.9,<0.0.10",
+  "pillow>=10.2,<11.0",
+  "pydantic>=2.6,<2.8",
+  "torch>=2.2,<2.3",
+  "torchvision>=0.17,<0.18",
+  "torch-tensorrt>=2.3,<2.4",
+  "cupy-cuda12x>=13.2,<13.3",
+  "pynvml>=11.5,<11.6",
+  "requests>=2.31,<2.32"
+]
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = ["ruff", "pytest", "httpx", "pytest-asyncio"]
+dcgm = ["pydcgm"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
