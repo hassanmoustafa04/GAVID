@@ -31,7 +31,7 @@ export function GpuMetricsPanel({ samples, source, device }: GpuMetricsPanelProp
   }));
 
   return (
-    <div className="card">
+    <div className="card" style={{ position: 'relative', zIndex: 100 }}>
       <h2>GPU Telemetry</h2>
       <p>
         Source: <strong>{source}</strong> {device ? `· ${device}` : null}

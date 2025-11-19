@@ -1,0 +1,3 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch-tensorrt
+cupy-cuda12x==13.2.0

@@ -4,7 +4,8 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from pydantic import BaseSettings, validator
+from pydantic import validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -38,9 +39,13 @@ class Settings(BaseSettings):
     max_batch_size: int = 8
     enable_profiling: bool = True
 
-    class Config:
-        env_prefix = "GAVID_"
-        case_sensitive = False
+    model_config = {
+        "env_prefix": "GAVID_",
+        "case_sensitive": False,
+        "protected_namespaces": ('settings_',),  # Avoid pydantic model_ namespace conflict
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+    }
 
     @validator("model_engine_path", pre=True)
     def _expand_engine_path(cls, raw: str | os.PathLike[str]) -> Path:

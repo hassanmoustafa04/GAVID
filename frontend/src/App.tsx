@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchGpuMetrics, GPUResponse, GPUSample, InferenceResponse } from "./api";
 import { InferenceUpload } from "./components/InferenceUpload";
 import { GpuMetricsPanel } from "./components/GpuMetricsPanel";
+import { GPUBackground } from "./components/GPUBackground";
 
 interface ToastState {
   message: string;
@@ -76,9 +77,9 @@ export default function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>GPU-Accelerated Vision Inference Dashboard</h1>
+        <h1>GAVID</h1>
         <p>
-          Monitor GPU health and run real-time image classification accelerated with PyTorch,
+          GPU-Accelerated Vision Inference Dashboard: Monitor GPU health and run real-time image classification accelerated with PyTorch,
           TensorRT, and FP16 execution. Backend metrics are sourced from NVIDIA DCGM when available.
         </p>
       </header>
@@ -140,6 +141,7 @@ export default function App() {
       </div>
 
       <GpuMetricsPanel samples={history} source={source} device={device} />
+      <GPUBackground />
     </div>
   );
 }

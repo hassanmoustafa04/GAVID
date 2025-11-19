@@ -22,6 +22,7 @@ docs/              Architecture deep dives and operational guides
 
 ## Prerequisites
 
+### For GPU-Accelerated Production (Linux + NVIDIA GPU)
 - Python 3.10+
 - Node.js 18+ / pnpm or npm
 - NVIDIA GPU with CUDA 12.x drivers
@@ -29,25 +30,70 @@ docs/              Architecture deep dives and operational guides
 - Optional but recommended: NVIDIA DCGM ≥ 3.1 for high-fidelity GPU telemetry
 - Optional Python dependency: `pydcgm` (installable via NVIDIA's DCGM Python wheels) unlocks native DCGM backend; without it the service falls back to NVML.
 
+### For CPU-Only Development (macOS / Windows)
+- Python 3.10+
+- Node.js 18+ / pnpm or npm
+- No GPU required - uses CPU fallback mode with stub metrics
+
 ## Backend setup
+
+### Option 1: macOS / CPU-Only Development
+
+Perfect for local development and testing without NVIDIA GPU:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install --upgrade pip
+pip install -r requirements-dev.txt
+
+# Copy environment template and configure for CPU mode
+cp .env.example .env
+# Edit .env and ensure: GAVID_DEVICE=cpu and GAVID_ALLOW_CPU_FALLBACK=true
+
+# Run the API
+uvicorn app.main:app --reload
+```
+
+**What works in CPU mode:**
+- ✅ Full API functionality (all endpoints)
+- ✅ PyTorch CPU inference (slower than GPU, no TensorRT)
+- ✅ Image classification with ResNet18
+- ✅ Stub GPU metrics (fake data for UI testing)
+- ✅ Frontend development
+- ❌ TensorRT acceleration (requires NVIDIA GPU)
+- ❌ CuPy GPU preprocessing (requires CUDA)
+- ❌ Real DCGM/NVML metrics (requires NVIDIA GPU)
+
+### Option 2: Linux with NVIDIA GPU (Production)
+
+For full GPU acceleration with TensorRT:
 
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
+
+# Install base dependencies
 pip install -r requirements.txt
 
-# If your CUDA toolkit differs, install the matching CuPy wheel (e.g. `pip install cupy-cuda11x`)
+# Install GPU-specific dependencies
+pip install -r requirements-gpu.txt
 
 # Optional: supply a local ResNet18 weight file to avoid network downloads
 export GAVID_MODEL_TORCH_WEIGHTS=/path/to/resnet18-f37072fd.pth
+
+# Copy and configure environment
+cp .env.example .env
+# Edit .env and ensure: GAVID_DEVICE=cuda:0 and GAVID_MODEL_FP16=true
 
 # Run the API
 uvicorn app.main:app --reload
 ```
 
-### Building the TensorRT engine ahead-of-time
+### Building the TensorRT engine ahead-of-time (GPU only)
 
 The backend automatically compiles a TensorRT engine on first inference. To pre-build:
 
@@ -86,14 +132,64 @@ This launches:
 - `gavid-frontend`: React static build served via nginx on port 8080
 - Optional `dcgm-exporter`: exposes GPU metrics for Prometheus/Grafana (enable by uncommenting in compose file)
 
+## Testing with Images
+
+### Method 1: Web Dashboard (Recommended)
+
+1. Start backend and frontend (see setup instructions above)
+2. Open browser:
+   - Native setup: `http://localhost:5173`
+   - Docker setup: `http://localhost:8080`
+3. Upload an image via the UI
+4. View results:
+   - Top-5 classification predictions with confidence scores
+   - Latency and throughput metrics
+   - Live GPU/CPU metrics charts
+
+### Method 2: API Testing with curl
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Upload an image for inference
+curl -X POST http://localhost:8000/infer \
+  -F "file=@/path/to/your/image.jpg"
+
+# Get GPU metrics (5 samples)
+curl http://localhost:8000/metrics/gpu?samples=5
+```
+
+**Example response:**
+```json
+{
+  "top1": {"label": "golden retriever", "confidence": 0.89},
+  "top5": [...],
+  "latency_ms": 28.5,
+  "throughput_fps": 35.1,
+  "engine": "TensorRT",
+  "batch_size": 1
+}
+```
+
+### Method 3: Automated Testing
+
+```bash
+# Benchmark CPU vs GPU performance (GPU only)
+python scripts/benchmark_inference.py --iters 25
+
+# Load test with random images
+python scripts/load_test.py --url http://localhost:8000/infer --requests 50
+```
+
 ## Grafana integration
 
 The backend exposes `/metrics/gpu` for on-demand telemetry. When running with DCGM, point Prometheus at the `dcgm-exporter` service and import Grafana dashboard ID 1860 to visualize GPU health. The React dashboard renders a concise subset for day-to-day operations.
 
-## Testing & profiling
+## Performance benchmarking
 
-- `scripts/benchmark_inference.py` profiles throughput/latency vs CPU to validate the 5× improvement claim.
-- `scripts/load_test.py` can drive batch inference to stress the GPU and verify telemetry responsiveness.
+- `scripts/benchmark_inference.py` profiles throughput/latency vs CPU to validate the 5× improvement claim (GPU setup only).
+- `scripts/load_test.py` can drive batch inference to stress the system and verify telemetry responsiveness.
 
 ## Roadmap
 

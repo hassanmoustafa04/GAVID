@@ -35,7 +35,7 @@ export function InferenceUpload({ onResult, onError }: InferenceUploadProps) {
   }
 
   return (
-    <div className="card">
+    <div className="card" style={{ position: 'relative', zIndex: 100 }}>
       <h2>Real-time Inference</h2>
       <p>Upload an image to classify with the TensorRT-optimized ResNet18 engine.</p>
       <label
