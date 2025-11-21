@@ -128,7 +128,8 @@ class _NVMLBackend(_MetricBackend):
 
     @property
     def device_name(self) -> Optional[str]:
-        return pynvml.nvmlDeviceGetName(self._handle).decode("utf-8")
+        name = pynvml.nvmlDeviceGetName(self._handle)
+        return name.decode("utf-8") if isinstance(name, bytes) else name
 
 
 class _StubBackend(_MetricBackend):
