@@ -121,6 +121,8 @@ class ResNet18Engine:
         model.eval()
         if self.device.type == "cuda":
             model = model.to(self.device)
+            if self.fp16:
+                model = model.half()
 
         self._torch_model = model
 
