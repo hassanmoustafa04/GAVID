@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .inference import ResNet18Engine, get_engine
@@ -47,6 +50,11 @@ def create_app(model_engine: ResNet18Engine | None = None) -> FastAPI:
     @app.on_event("shutdown")
     async def _shutdown() -> None:
         collector.close()
+
+    # Serve frontend static files (must be last so API routes take precedence)
+    frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
+    if frontend_dist.exists():
+        app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")
 
     return app
 
